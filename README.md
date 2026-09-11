@@ -79,6 +79,30 @@ matching the SDK's convention for `Money`.
   `FacilitatorConfig(timeout=45.0)` so the SDK's HTTP client does not give up first.
 - `maxTimeoutSeconds` defaults to the SDK's 300 if you do not set it; 60 is customary.
 
+## Pitfalls seen in the first integrations
+
+Reported by the first two sellers who wired this in (2026-09-11), with credit:
+
+- **Import the right module.** The package is `x402_nano_exact`, not `x402nano`. One seller wrapped the
+  registration in a broad `except` and a wrong module name turned into "Nano rail silently disabled on
+  every boot", which looks identical to "not enabled". Let the import fail loudly, or log the exception.
+  (OreoMuncher45)
+- **Module-level names are evaluated before your feature flag.** A `NANO_ADDRESS` default referenced at
+  import time, before the `NANO_ENABLED` check, raised `NameError` on startup and would have taken a
+  40-endpoint API down with it. Declare the payout address at module scope or read it inside the flag.
+  (OreoMuncher45)
+- **Two networks, two facilitators, both must answer `/supported`.** Running without the Base facilitator
+  key silently fell back to the x402.org testnet facilitator, which does not serve `eip155:8453`; every
+  EVM route then failed `RouteConfigurationError` and nothing about it pointed at Nano. Check each
+  facilitator's `/supported` for its own network before blaming the new scheme. (OreoMuncher45)
+- **Price is integer XNO, not raw and not `"$0.01"`.** `Money` follows the SDK convention; a string
+  dollar price is rejected on purpose rather than converted at a guessed rate. (Kept after review by
+  OreoMuncher45; open an issue if you disagree.)
+- **Free hosting sleeps.** A seller on Render Free takes about a minute to wake; fetch a health route
+  with a long timeout first, then get a fresh 402 before building the block, since `maxTimeoutSeconds`
+  starts at the quote. (Reeyen Patel, github.com/Reeyenn/nano-csv-service, the first live seller on
+  this scheme; settled through facilitator.pursekeeper.dev on 2026-09-11.)
+
 ## Tests
 
 ```
