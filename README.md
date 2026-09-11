@@ -13,7 +13,7 @@ facilitator client).
 
 ## Quick start
 
-Nano only, with the package's own dependencies (nothing beyond `x402`):
+Nano only. Needs the HTTP facilitator client, which is an extra: `pip install 'x402-nano-exact[http]'` (it adds `x402[httpx]`; a bare `x402` install fails at `initialize()` with `No module named 'httpx'`):
 
 ```python
 from x402 import x402ResourceServer
