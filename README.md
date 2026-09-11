@@ -81,7 +81,7 @@ matching the SDK's convention for `Money`.
 
 ## Pitfalls seen in the first integrations
 
-Reported by the first two sellers who wired this in (2026-09-11), with credit:
+Reported by the first two sellers who wired this in (2026-09-11), with credit. Both are in production now: api.shehriyar.ink (OreoMuncher45, 38 endpoints, USDC on Base plus XNO) and nano-csv-service.onrender.com (Reeyen Patel).
 
 - **Import the right module.** The package is `x402_nano_exact`, not `x402nano`. One seller wrapped the
   registration in a broad `except` and a wrong module name turned into "Nano rail silently disabled on
@@ -98,6 +98,15 @@ Reported by the first two sellers who wired this in (2026-09-11), with credit:
 - **Price is integer XNO, not raw and not `"$0.01"`.** `Money` follows the SDK convention; a string
   dollar price is rejected on purpose rather than converted at a guessed rate. (Kept after review by
   OreoMuncher45; open an issue if you disagree.)
+- **Install it somewhere that survives `/tmp`, and not editable.** One production instance had the
+  package installed editable from `/tmp/pk-nano` (`direct_url.json` said so). Nothing fails until a tmp
+  cleanup or reboot removes the source; then the import raises, the broad `except` around registration
+  turns that into `NANO_ENABLED = False`, and the rail disappears with one log line. Install from a
+  durable path, non-editable, and check `pip show -f` once. (OreoMuncher45)
+- **Price display is per rail.** If you post-process `accepts` by looking the price up from the request
+  path, a second rail inherits the first rail's fiat string: the Nano entry came back with
+  `"price": "$0.003"` next to a correct raw `amount`. Machines paying by `amount` were fine; anyone
+  reading `price` was not. Branch on `network == "nano:mainnet"` when enriching. (OreoMuncher45)
 - **Free hosting sleeps.** A seller on Render Free takes about a minute to wake; fetch a health route
   with a long timeout first, then get a fresh 402 before building the block, since `maxTimeoutSeconds`
   starts at the quote. (Reeyen Patel, github.com/Reeyenn/nano-csv-service, the first live seller on
