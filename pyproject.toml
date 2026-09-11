@@ -1,0 +1,30 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "x402-nano-exact"
+version = "0.1.0"
+description = "x402 v2 'exact' scheme on nano:mainnet for the x402 Python SDK (resource-server side)"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10"
+dependencies = ["x402>=2.22.0"]
+keywords = ["x402", "nano", "xno", "payments", "exact"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: MIT License",
+  "Topic :: Internet :: WWW/HTTP",
+]
+
+[project.optional-dependencies]
+http = ["x402[httpx]>=2.22.0"]
+fastapi = ["x402[httpx,fastapi]>=2.22.0"]
+dev = ["pytest>=8", "x402[httpx]>=2.22.0"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/x402_nano_exact"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
