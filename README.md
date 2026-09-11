@@ -13,19 +13,36 @@ facilitator client).
 
 ## Quick start
 
+Nano only, with the package's own dependencies (nothing beyond `x402`):
+
 ```python
 from x402 import x402ResourceServer
 from x402.http import FacilitatorConfig, HTTPFacilitatorClient
-from x402.mechanisms.evm.exact import ExactEvmServerScheme
 from x402_nano_exact import ExactNanoServerScheme
 
-base_facilitator = HTTPFacilitatorClient(FacilitatorConfig(url="https://x402.org/facilitator"))
+nano_facilitator = HTTPFacilitatorClient(FacilitatorConfig(url="https://facilitator.pursekeeper.dev", timeout=45.0))
+
+server = x402ResourceServer([nano_facilitator])
+server.register("nano:mainnet", ExactNanoServerScheme())
+server.initialize()  # fetches /supported and routes nano:mainnet to the Nano facilitator
+```
+
+Adding Nano next to an existing Base USDC rail needs two more things: the SDK's EVM extra
+(`pip install 'x402[evm,httpx]'`, otherwise the import below raises `ImportError: EVM mechanism
+requires ethereum packages`) and a facilitator whose `/supported` lists the Base network you
+register. `https://x402.org/facilitator` serves Base Sepolia (`eip155:84532`) only; for Base
+mainnet (`eip155:8453`) use the facilitator your USDC rail already uses.
+
+```python
+from x402.mechanisms.evm.exact import ExactEvmServerScheme  # needs x402[evm]
+
+base_facilitator = HTTPFacilitatorClient(FacilitatorConfig(url="https://<the facilitator your Base rail uses>"))
 nano_facilitator = HTTPFacilitatorClient(FacilitatorConfig(url="https://facilitator.pursekeeper.dev", timeout=45.0))
 
 server = x402ResourceServer([base_facilitator, nano_facilitator])
 server.register("eip155:8453", ExactEvmServerScheme())
 server.register("nano:mainnet", ExactNanoServerScheme())
-server.initialize()  # fetches /supported from each facilitator and routes nano:mainnet to the Nano one
+server.initialize()  # routes each network to the facilitator that advertises it
 ```
 
 Then use the server exactly as for any other network. A route accepting both:
@@ -41,7 +58,8 @@ routes = {
 }
 ```
 
-See `examples/fastapi_server.py` for the full FastAPI middleware version.
+See `examples/fastapi_server.py` for the full FastAPI middleware version (dual rail, so it needs
+`pip install 'x402[evm,httpx,fastapi]'`).
 
 ## What goes on the wire
 
@@ -111,6 +129,11 @@ Reported by the first two sellers who wired this in (2026-09-11), with credit. B
   with a long timeout first, then get a fresh 402 before building the block, since `maxTimeoutSeconds`
   starts at the quote. (Reeyen Patel, github.com/Reeyenn/nano-csv-service, the first live seller on
   this scheme; settled through facilitator.pursekeeper.dev on 2026-09-11.)
+- **The EVM scheme is an extra, and x402.org's facilitator is testnet.** `from x402.mechanisms.evm.exact
+  import ExactEvmServerScheme` raises `ImportError` unless `x402[evm]` is installed, and
+  `https://x402.org/facilitator` advertises `eip155:84532` (Base Sepolia), not `eip155:8453`. An
+  earlier quick start here paired them; it is now Nano-only first, dual rail second. (Arjay Siega's
+  coding agent, github.com/jackspiece, 2026-09-11, reproduced in a fresh venv.)
 
 ## Tests
 

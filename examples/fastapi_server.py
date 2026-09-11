@@ -14,7 +14,11 @@ from x402_nano_exact import ExactNanoServerScheme
 
 # One facilitator client per facilitator. x402ResourceServer accepts a list and,
 # on initialize(), maps each (network, scheme) from that client's /supported to it.
-base_facilitator = HTTPFacilitatorClient(FacilitatorConfig(url="https://x402.org/facilitator"))
+# Needs `pip install 'x402[evm,httpx,fastapi]'` (the EVM extra is not part of this package's
+# dependencies). The Base facilitator must advertise eip155:8453 in /supported;
+# https://x402.org/facilitator serves Base Sepolia (eip155:84532) only, so put the
+# facilitator your USDC rail already uses here.
+base_facilitator = HTTPFacilitatorClient(FacilitatorConfig(url="https://<the facilitator your Base rail uses>"))
 nano_facilitator = HTTPFacilitatorClient(
     # /settle waits for confirmation up to 30 s; give the HTTP client more than the 30 s default.
     FacilitatorConfig(url="https://facilitator.pursekeeper.dev", timeout=45.0)
