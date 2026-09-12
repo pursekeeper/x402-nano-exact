@@ -132,8 +132,8 @@ Reported by the first two sellers who wired this in (2026-09-11), with credit. B
 - **The EVM scheme is an extra, and x402.org's facilitator is testnet.** `from x402.mechanisms.evm.exact
   import ExactEvmServerScheme` raises `ImportError` unless `x402[evm]` is installed, and
   `https://x402.org/facilitator` advertises `eip155:84532` (Base Sepolia), not `eip155:8453`. An
-  earlier quick start here paired them; it is now Nano-only first, dual rail second. (Arjay Siega's
-  coding agent, github.com/jackspiece, 2026-09-11, reproduced in a fresh venv.)
+  earlier quick start here paired them; it is now Nano-only first, dual rail second. (jackspiece,
+  github.com/jackspiece, 2026-09-11, reproduced in a fresh venv.)
 
 ## Tests
 
