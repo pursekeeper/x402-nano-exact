@@ -13,7 +13,7 @@ facilitator client).
 
 ## Quick start
 
-Nano only. Needs the HTTP facilitator client, which is an extra: `pip install 'x402-nano-exact[http]'` (it adds `x402[httpx]`; a bare `x402` install fails at `initialize()` with `No module named 'httpx'`):
+Nano only. Needs the HTTP facilitator client, which is an extra. The package is not on PyPI yet (the name is reserved for the x402nano organisation; see x402nano/exact#4), so install from this repository: `pip install 'x402-nano-exact[http] @ git+https://github.com/pursekeeper/x402-nano-exact'` (it adds `x402[httpx]`; a bare `x402` install fails at `initialize()` with `No module named 'httpx'`; verified 2026-09-12 with pip 25 into a clean target):
 
 ```python
 from x402 import x402ResourceServer
