@@ -110,7 +110,12 @@ class ExactNanoScheme:
             if result is not None:
                 return result
 
-        if isinstance(price, str) and price.lstrip().startswith("$"):
+        # The SDK normalizes a trailing USD symbol away. Inspect the original
+        # price after custom converters have had their chance, so explicit fiat
+        # cannot fall through to the native-XNO conversion.
+        if isinstance(price, str) and (
+            price.lstrip().startswith("$") or re.search(r"\s+USD\s*$", price, re.IGNORECASE)
+        ):
             raise ValueError(
                 f"fiat price {price!r} is not supported on {network}; give the amount in XNO "
                 "(e.g. '0.01') or register a money parser that converts it"

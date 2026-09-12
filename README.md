@@ -80,7 +80,7 @@ entry; values you set in `extra` yourself take precedence.
 | --- | --- |
 | `"0.01"`, `0.01`, `"0.01 XNO"` | XNO, converted exactly to raw |
 | `{"amount": "10000000000000000000000000000", "asset": "XNO"}` / `AssetAmount(...)` | already raw |
-| `"$0.01"` | rejected unless you `register_money_parser(...)` a fiat converter |
+| `"$0.01"`, `"0.01 USD"` (case-insensitive USD) | rejected unless you `register_money_parser(...)` a fiat converter |
 
 Rejected: zero/negative, more than 30 decimal places, other assets, and integer
 amounts above the Nano supply (a raw amount typed as XNO — pass it as `AssetAmount`).
