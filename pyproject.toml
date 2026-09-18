@@ -17,6 +17,12 @@ classifiers = [
   "Topic :: Internet :: WWW/HTTP",
 ]
 
+[project.urls]
+Homepage = "https://github.com/pursekeeper/x402-nano-exact"
+Repository = "https://github.com/pursekeeper/x402-nano-exact"
+Issues = "https://github.com/pursekeeper/x402-nano-exact/issues"
+Facilitator = "https://facilitator.pursekeeper.dev"
+
 [project.optional-dependencies]
 http = ["x402[httpx]>=2.22.0"]
 fastapi = ["x402[httpx,fastapi]>=2.22.0"]
