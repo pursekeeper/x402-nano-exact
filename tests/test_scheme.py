@@ -9,6 +9,7 @@ from x402 import x402ResourceServerSync
 from x402.schemas import AssetAmount, PaymentPayload, ResourceConfig, ResourceInfo, VerifyResponse
 
 from x402_nano_exact import ExactNanoScheme, ExactNanoServerScheme, xno_to_raw
+from x402_nano_exact.constants import MAX_SUPPLY_XNO, RAW_PER_XNO
 
 from .conftest import NANO_KIND_EXTRA, FakeNanoFacilitator
 
@@ -65,6 +66,33 @@ def test_parse_price_to_raw(price, raw):
 def test_parse_price_rejects(price):
     with pytest.raises(ValueError):
         ExactNanoScheme().parse_price(price, NETWORK)
+
+
+@pytest.mark.parametrize("price", ["133248298", "133248298.000"])
+def test_max_supply_xno_values_are_valid(price):
+    expected_raw = str(MAX_SUPPLY_XNO * RAW_PER_XNO)
+    assert xno_to_raw(price) == expected_raw
+    assert ExactNanoScheme().parse_price(price, NETWORK) == AssetAmount(
+        amount=expected_raw, asset="XNO", extra={}
+    )
+
+
+@pytest.mark.parametrize(
+    "price",
+    ["133248298.5", "133248298.000000000000000000000000000001"],
+)
+def test_fractional_xno_above_supply_is_rejected_without_raw_hint(price):
+    with pytest.raises(ValueError) as error:
+        xno_to_raw(price)
+    assert str(error.value) == f"{price} XNO exceeds the Nano supply"
+    with pytest.raises(ValueError, match="exceeds the Nano supply"):
+        ExactNanoScheme().parse_price(price, NETWORK)
+
+
+def test_integral_xno_above_supply_keeps_raw_amount_hint():
+    with pytest.raises(ValueError) as error:
+        xno_to_raw("133248299")
+    assert "if this is a raw amount pass it as" in str(error.value)
 
 
 def test_money_parser_chain_can_price_in_fiat():

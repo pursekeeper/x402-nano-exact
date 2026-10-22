@@ -37,8 +37,8 @@ def xno_to_raw(amount: str | int | float | Decimal) -> str:
 
     Raises:
         ValueError: If the amount is not a positive finite number, has more than
-            30 decimal places (finer than one raw), or is an integer above the
-            Nano supply (which means it was a raw amount typed as XNO).
+            30 decimal places (finer than one raw), or exceeds the Nano supply.
+            Integral over-ceiling values include a raw-amount hint.
     """
     try:
         value = Decimal(str(amount))
@@ -46,11 +46,13 @@ def xno_to_raw(amount: str | int | float | Decimal) -> str:
         raise ValueError(f"invalid XNO amount: {amount!r}") from e
     if not value.is_finite() or value <= 0:
         raise ValueError(f"XNO amount must be positive: {amount!r}")
-    if value == value.to_integral_value() and value > MAX_SUPPLY_XNO:
-        raise ValueError(
-            f"{amount} XNO exceeds the Nano supply; if this is a raw amount pass it as "
-            f"{{'amount': '{amount}', 'asset': 'XNO'}}"
-        )
+    if value > MAX_SUPPLY_XNO:
+        if value == value.to_integral_value():
+            raise ValueError(
+                f"{amount} XNO exceeds the Nano supply; if this is a raw amount pass it as "
+                f"{{'amount': '{amount}', 'asset': 'XNO'}}"
+            )
+        raise ValueError(f"{amount} XNO exceeds the Nano supply")
     with localcontext() as ctx:
         ctx.prec = 100  # never round: 30 fractional digits plus the integer part must fit
         raw = value * RAW_PER_XNO
