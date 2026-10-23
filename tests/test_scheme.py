@@ -105,6 +105,40 @@ def test_money_parser_chain_can_price_in_fiat():
     assert scheme.parse_price("0.5", NETWORK).amount == xno_to_raw("0.5")  # parser passed, default applied
 
 
+def test_raw_asset_amount_and_requirements_enforce_nano_supply_ceiling(pay_to):
+    max_raw = str(MAX_SUPPLY_XNO * RAW_PER_XNO)
+    over_raw = str(MAX_SUPPLY_XNO * RAW_PER_XNO + 1)
+
+    assert ExactNanoScheme().parse_price({"amount": max_raw, "asset": "XNO"}, NETWORK) == AssetAmount(
+        amount=max_raw, asset="XNO", extra={}
+    )
+    with pytest.raises(ValueError, match="exceeds the Nano supply"):
+        ExactNanoScheme().parse_price({"amount": over_raw, "asset": "XNO"}, NETWORK)
+    with pytest.raises(ValueError, match="exceeds the Nano supply"):
+        ExactNanoScheme().parse_price(AssetAmount(amount=over_raw, asset="XNO"), NETWORK)
+
+    server = make_server()
+    with pytest.raises(ValueError, match="exceeds the Nano supply"):
+        server.build_payment_requirements(
+            ResourceConfig(scheme="exact", network=NETWORK, pay_to=pay_to, price={"amount": over_raw, "asset": "XNO"})
+        )
+
+
+@pytest.mark.parametrize(
+    "bad_return",
+    [
+        AssetAmount(amount="0", asset="XNO"),
+        AssetAmount(amount="0.01", asset="XNO"),
+        AssetAmount(amount="1", asset="USDC"),
+        AssetAmount(amount=str(MAX_SUPPLY_XNO * RAW_PER_XNO + 1), asset="XNO"),
+    ],
+)
+def test_money_parser_result_is_validated_as_raw_xno(bad_return):
+    scheme = ExactNanoScheme().register_money_parser(lambda amount, network: bad_return)
+    with pytest.raises(ValueError):
+        scheme.parse_price("$0.01", NETWORK)
+
+
 # ------------------------------------------------- requirements via the SDK
 
 
