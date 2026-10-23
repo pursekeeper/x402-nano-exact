@@ -30,6 +30,7 @@ MoneyParser = Callable[[str | int | float, str], AssetAmount | None]
 """Same shape as the SDK's own money parsers: ``(decimal_amount, network) -> AssetAmount | None``."""
 
 _RAW_RE = re.compile(r"[1-9]\d*")
+_MAX_RAW = MAX_SUPPLY_XNO * RAW_PER_XNO
 
 
 def xno_to_raw(amount: str | int | float | Decimal) -> str:
@@ -110,7 +111,11 @@ class ExactNanoScheme:
         for parser in self._money_parsers:
             result = parser(decimal_amount, str(network))
             if result is not None:
-                return result
+                if isinstance(result, dict):
+                    return self._raw_asset_amount(result.get("amount"), result.get("asset"), result.get("extra"))
+                if isinstance(result, AssetAmount):
+                    return self._raw_asset_amount(result.amount, result.asset, result.extra)
+                raise ValueError(f"money parser must return an AssetAmount or None, got: {result!r}")
 
         # The SDK normalizes a trailing USD symbol away. Inspect the original
         # price after custom converters have had their chance, so explicit fiat
@@ -154,6 +159,8 @@ class ExactNanoScheme:
             requirements.amount = xno_to_raw(requirements.amount)
         if not _RAW_RE.fullmatch(requirements.amount):
             raise ValueError(f"amount must be a positive integer string in raw: {requirements.amount!r}")
+        if int(requirements.amount) > _MAX_RAW:
+            raise ValueError(f"amount {requirements.amount} raw exceeds the Nano supply")
 
         extra = dict(requirements.extra or {})
         extra.setdefault("work", kind_extra.get("work", "required"))
@@ -172,4 +179,6 @@ class ExactNanoScheme:
         raw = str(amount)
         if not _RAW_RE.fullmatch(raw):
             raise ValueError(f"AssetAmount.amount must be a positive integer string in raw: {amount!r}")
+        if int(raw) > _MAX_RAW:
+            raise ValueError(f"AssetAmount.amount {raw} raw exceeds the Nano supply")
         return AssetAmount(amount=raw, asset=ASSET_XNO, extra=dict(extra or {}))
