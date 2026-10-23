@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "x402-nano-exact"
-version = "0.1.1"
+version = "0.1.2"
 description = "x402 v2 'exact' scheme on nano:mainnet for the x402 Python SDK (resource-server side)"
 readme = "README.md"
 license = "MIT"
